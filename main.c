@@ -1,4 +1,5 @@
 #include "sdl_utils.h"
+#include "gb_cpu.h"
 
 const Uint32 k_max_ticks_per_frame = 16;
 
@@ -14,42 +15,69 @@ void DrawLogo()
 
 	SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);	
 }
+typedef enum _EGameState
+{
+	EGameState_INIT = 0,
+	EGameState_LOGO = 1,
+	EGameState_MAIN = 2,
+} EGameState;
 
 void GameLoop()
 {
+	const Uint32 starting_ticks = SDL_GetTicks();
+
+	EGameState game_state = EGameState_LOGO;
+
 	int gameRunning = 1;
 	while (gameRunning)
 	{
 		SDL_RenderClear(g_renderer);
 
 		const Uint32 previous_ticks = SDL_GetTicks();
-		if (previous_ticks < 3000) // show the logo only for ~3 seconds
-			DrawLogo();
 
-		while (SDL_PollEvent(&event))
+		switch (game_state)
 		{
-			switch (event.type)
-			{
-				case SDL_KEYDOWN:
-					keypressed = event.key.keysym.sym;
-					if (keypressed == QUITKEY)
+			case EGameState_INIT:
+				cpu_init();
+				game_state = EGameState_LOGO;
+				break;
+
+			case EGameState_LOGO:
+				DrawLogo();
+				if ((previous_ticks - starting_ticks) > 1000)
+					game_state = EGameState_MAIN;
+				break;
+
+			case EGameState_MAIN:
+				cpu_tick();
+				while (SDL_PollEvent(&event))
+				{
+					switch (event.type)
 					{
+					case SDL_KEYDOWN:
+						keypressed = event.key.keysym.sym;
+						if (keypressed == QUITKEY)
+						{
+							gameRunning = 0;
+							break;
+						}
+
+						break;
+					case SDL_QUIT: /* if mouse click to close window */
 						gameRunning = 0;
+						break;
+
+					case SDL_KEYUP:
 						break;
 					}
 
-					break;
-				case SDL_QUIT: /* if mouse click to close window */
-					gameRunning = 0;
-					break;
+				} /* while SDL_PollEvent */				
 
-				case SDL_KEYUP:
-					break;
-			}
+				SDL_RenderPresent(g_renderer);
+				break;
+		}
 
-		} /* while SDL_PollEvent */
-
-		SDL_RenderPresent(g_renderer);
+		
 
 		const Uint32 curent_ticks = SDL_GetTicks();
 		const Uint32 ticks_this_frame = curent_ticks - previous_ticks;
