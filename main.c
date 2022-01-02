@@ -1,51 +1,59 @@
 #include "sdl_utils.h"
 #include "gb_cpu.h"
+#include "gb_memory.h"
 
 const Uint32 k_max_ticks_per_frame = 16;
 
 void DrawLogo()
 {
-	SDL_Rect rect;
+	SDL_FRect rect;
+	rect.h = HEIGHT * .25f;
+	rect.w = WIDTH * .25f;
+	rect.y = HEIGHT * .5f - rect.h * .5f;
+	rect.x = WIDTH *.5f - rect.w * .5f;
 	SDL_SetRenderDrawColor(g_renderer, 255, 0, 0, 255);
-	rect.h = (int)(HEIGHT * .25f);
-	rect.w = (int)(WIDTH * .25f);
-	rect.y = (int)(HEIGHT * .5f - rect.h * .5f);
-	rect.x = (int)(WIDTH *.5f - rect.w * .5f);
-	SDL_RenderFillRect(g_renderer, &rect);
-
-	SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);	
+	SDL_RenderDrawRectF(g_renderer, &rect);
+	SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
 }
+
 typedef enum _EGameState
 {
 	EGameState_INIT = 0,
-	EGameState_LOGO = 1,
-	EGameState_MAIN = 2,
+	EGameState_LOAD,
+	EGameState_MAIN,
 } EGameState;
 
 void GameLoop()
 {
-	const Uint32 starting_ticks = SDL_GetTicks();
+	EGameState game_state = EGameState_INIT;
+	Uint32 starting_ticks = 0;
 
-	EGameState game_state = EGameState_LOGO;
+	FILE* f = NULL;
+	errno_t err;
 
 	int gameRunning = 1;
 	while (gameRunning)
-	{
+	{		
 		SDL_RenderClear(g_renderer);
-
 		const Uint32 previous_ticks = SDL_GetTicks();
 
 		switch (game_state)
 		{
 			case EGameState_INIT:
 				cpu_init();
-				game_state = EGameState_LOGO;
+				game_state = EGameState_LOAD;
 				break;
 
-			case EGameState_LOGO:
-				DrawLogo();
-				if ((previous_ticks - starting_ticks) > 1000)
-					game_state = EGameState_MAIN;
+			case EGameState_LOAD:
+				err = fopen_s(&f, ".\..\\..\\..\\bgb\\bgbtest.gb", "rb");
+				SDL_assert(err == 0);
+				if (err == 0)
+				{
+					load_file(f);
+					fclose(f);
+				}				
+
+				game_state = EGameState_MAIN;
 				break;
 
 			case EGameState_MAIN:
@@ -71,12 +79,11 @@ void GameLoop()
 						break;
 					}
 
-				} /* while SDL_PollEvent */				
-
-				SDL_RenderPresent(g_renderer);
+				} /* while SDL_PollEvent */
 				break;
 		}
 
+		SDL_RenderPresent(g_renderer);
 		
 
 		const Uint32 curent_ticks = SDL_GetTicks();

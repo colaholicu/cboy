@@ -6,13 +6,12 @@
 #include <stdlib.h>
 
 #define QUITKEY SDLK_ESCAPE
-#define WIDTH 1024
-#define HEIGHT 768
+#define WIDTH (160*5)
+#define HEIGHT (144*5)
 
 SDL_Window* g_screen = NULL;
 SDL_Renderer* g_renderer;
 SDL_Event event;
-SDL_Rect source, destination, dst;
 
 int errorCount = 0;
 int keypressed;

@@ -1,4 +1,5 @@
 #include "gb_cpu.h"
+#include "gb_cpu_instructions.h"
 
 /*-----------------------------------
 Bit	Name	Explanation
@@ -58,4 +59,38 @@ void dec(unsigned char* r)
 
 	if ((*r) == 0)
 		SET_Z;
+}
+
+void add(unsigned short* r, unsigned short value)
+{
+	CLEAR_N;
+
+	// overflow bit 11
+	if (((*r & value) & 0x0800) != 0)
+		SET_H;
+	else
+		CLEAR_H;
+
+	// overflow bit 15
+	if (((*r & value) & 0x8000) != 0)
+		SET_C;
+	else
+		CLEAR_C;
+}
+
+void rlc(unsigned char* r)
+{
+	CLEAR_Z;
+	CLEAR_N;
+	CLEAR_H;
+	(*r) = (*r) << 1 | (*r) & 0x80;
+	if (((*r) & 0x01) != 0)
+		SET_C;
+	else
+		CLEAR_C;
+}
+
+void jp(unsigned short address)
+{
+	reg.pc = address;
 }

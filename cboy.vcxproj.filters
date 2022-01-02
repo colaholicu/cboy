@@ -41,5 +41,8 @@
     <ClInclude Include="gb_cpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gb_cpu_instructions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
