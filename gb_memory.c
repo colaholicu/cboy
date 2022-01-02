@@ -1,4 +1,5 @@
 #include "gb_memory.h"
+#include "gb_cpu.h"
 #include <SDL_assert.h>
 #include <stdio.h>
 
@@ -39,24 +40,30 @@ void init_memory()
 	g_memory[0xffff] = 0x00; // IE
 }
 
-unsigned char mem_read(unsigned short* pc)
+unsigned char mem_read()
 {
-	SDL_assert(*pc < 0xfffe);
-	return g_memory[(*pc)++];
+	SDL_assert(reg.pc < 0xfffe);
+	return g_memory[reg.pc++];
 }
 
-unsigned short mem_read16(unsigned short* pc)
+unsigned short mem_read16()
 {
 	unsigned short ret = 0;
-	unsigned char lsb = mem_read(pc);
-	unsigned char msb = mem_read(pc);
+	unsigned char lsb = mem_read();
+	unsigned char msb = mem_read();
 
 	ret = (0xff00 & (msb << 8)) | (0x00ff & lsb);
 
 	return ret;
 }
 
-void mem_write(unsigned short address, unsigned char value)
+unsigned char mem_read_raw(const unsigned short address)
+{
+	SDL_assert(address < 0xfffe);
+	return g_memory[address];
+}
+
+void mem_write(const unsigned short address, const unsigned char value)
 {
 	if (address != 0xffff) // exception for IME flag
 		SDL_assert(address < 0xfffe); // overflow
@@ -64,7 +71,7 @@ void mem_write(unsigned short address, unsigned char value)
 	g_memory[address] = value;
 }
 
-void mem_write16(unsigned short address, unsigned short value)
+void mem_write16(const unsigned short address, const unsigned short value)
 {
 	SDL_assert(address < 0xfffe); // overflow
 	SDL_assert(address >= 0x8000); // read-only data

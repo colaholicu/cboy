@@ -11,7 +11,7 @@ void cpu_process_opcode(unsigned char op_code)
 		return;
 
 	case 0x01:
-		ld16(&reg.bc.r, mem_read16(&reg.pc));
+		ld16(&reg.bc.r, mem_read16());
 		break;
 
 	case 0x02:
@@ -31,7 +31,7 @@ void cpu_process_opcode(unsigned char op_code)
 		break;
 
 	case 0x06:
-		ld(&reg.bc.hi, mem_read(&reg.pc));
+		ld(&reg.bc.hi, mem_read());
 		break;
 
 	case 0x07:
@@ -39,22 +39,24 @@ void cpu_process_opcode(unsigned char op_code)
 		break;
 
 	case 0x08:
-	{
-		unsigned short address = mem_read16(&reg.pc);
-		mem_write16(address, reg.sp);
+		mem_write16(mem_read16(), reg.sp);
 		break;
-	}
 
 	case 0x09:
 		add(&reg.hl.r, reg.bc.r);
 		break;
 
-	case 0xc3:
-	{
-		unsigned short address = mem_read16(&reg.pc);
-		jp(address);
+	case 0x31:
+		ld16(&reg.sp, mem_read16());
 		break;
-	}
+
+	case 0xc3:
+		jp(mem_read16());
+		break;
+
+	case 0xf0:
+		ld(&reg.af.hi, mem_read_raw(0xff00 | (0x00ff & mem_read())));
+		break;
 
 	case 0xf3:
 		mem_write(0xffff, 0); // IME = 0
@@ -65,7 +67,7 @@ void cpu_process_opcode(unsigned char op_code)
 		break;
 
 	default:
-		SDL_assert(0); // invalid opcode
+		SDL_assert(0, op_code); // invalid opcode
 		break;
 	}
 }

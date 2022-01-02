@@ -45,7 +45,7 @@ void GameLoop()
 				break;
 
 			case EGameState_LOAD:
-				err = fopen_s(&f, ".\..\\..\\..\\bgb\\bgbtest.gb", "rb");
+				err = fopen_s(&f, "...\\..\\..\\bgb\\bgbtest.gb", "rb");
 				SDL_assert(err == 0);
 				if (err == 0)
 				{
