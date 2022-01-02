@@ -61,6 +61,11 @@ void dec(unsigned char* r)
 		SET_Z;
 }
 
+void dec16(unsigned short* r)
+{
+	--(*r);
+}
+
 void add(unsigned short* r, unsigned short value)
 {
 	CLEAR_N;
@@ -90,7 +95,7 @@ void rlc(unsigned char* r)
 		CLEAR_C;
 }
 
-void jp(unsigned short address)
+void jump(unsigned short address)
 {
 	reg.pc = address;
 }
