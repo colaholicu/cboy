@@ -324,10 +324,160 @@ void cpu_process_opcode(unsigned char op_code)
 	case 0xf9:
 		ld16(&reg.sp, reg.hl.r);
 		break;
-
 	case 0xf8:
-		SDL_assert(0, "To be continued");
+	{
+		const unsigned short n = 0x00ff & mem_read();
+		unsigned short result = reg.sp;
+		add16(&result, n);
+		ld16(&reg.hl.r, result);
+		set_flags(reg.af.lo & 0x3f);
 		break;
+	}
+	case 0x08:
+		mem_write16(mem_read16(), reg.sp);
+		break;
+
+	// stack push	
+	case 0xc5:
+		push(reg.bc.r);
+		break;
+	case 0xd5:
+		push(reg.de.r);
+		break;
+	case 0xe5:
+		push(reg.hl.r);
+		break;
+	case 0xf5:
+		push(reg.af.r);
+		break;
+
+	// stack pop
+	case 0xc1:
+		pop(&reg.bc.r);
+		break;
+	case 0xd1:
+		pop(&reg.de.r);
+		break;
+	case 0xe1:
+		pop(&reg.hl.r);
+		break;
+	case 0xf1:
+		pop(&reg.af.r);
+		break;
+
+	// 8-bit addition A, n
+	case 0x80:
+		add(&reg.af.hi, reg.bc.hi);
+		break;
+	case 0x81:
+		add(&reg.af.hi, reg.bc.lo);
+		break;
+	case 0x82:
+		add(&reg.af.hi, reg.de.hi);
+		break;
+	case 0x83:
+		add(&reg.af.hi, reg.de.lo);
+		break;
+	case 0x84:
+		add(&reg.af.hi, reg.hl.hi);
+		break;
+	case 0x85:
+		add(&reg.af.hi, reg.hl.lo);
+		break;
+	case 0x86:
+		add(&reg.af.hi, mem_read_raw(reg.hl.r));
+		break;
+	case 0x87:
+		add(&reg.af.hi, reg.af.hi);
+		break;
+	case 0xc6:
+		add(&reg.af.hi, mem_read());
+		break;
+
+	// 8-bit addition A, n + Carry
+	case 0x88:
+		add(&reg.af.hi, reg.bc.hi + (reg.af.lo & 0x10));
+		break;
+	case 0x89:
+		add(&reg.af.hi, reg.bc.lo + (reg.af.lo & 0x10));
+		break;
+	case 0x8a:
+		add(&reg.af.hi, reg.de.hi + (reg.af.lo & 0x10));
+		break;
+	case 0x8b:
+		add(&reg.af.hi, reg.de.lo + (reg.af.lo & 0x10));
+		break;
+	case 0x8c:
+		add(&reg.af.hi, reg.hl.hi + (reg.af.lo & 0x10));
+		break;
+	case 0x8d:
+		add(&reg.af.hi, reg.hl.lo + (reg.af.lo & 0x10));
+		break;
+	case 0x8e:
+		add(&reg.af.hi, mem_read_raw(reg.hl.r) + (reg.af.lo & 0x10));
+		break;
+	case 0x8f:
+		add(&reg.af.hi, reg.af.hi + (reg.af.lo & 0x10));
+		break;
+	case 0xce:
+		add(&reg.af.hi, mem_read() + (reg.af.lo & 0x10));
+		break;
+
+	// 8-bit subtraction A, n
+	case 0x90:
+		sub(&reg.af.hi, reg.bc.hi);
+		break;
+	case 0x91:
+		sub(&reg.af.hi, reg.bc.lo);
+		break;
+	case 0x92:
+		sub(&reg.af.hi, reg.de.hi);
+		break;
+	case 0x93:
+		sub(&reg.af.hi, reg.de.lo);
+		break;
+	case 0x94:
+		sub(&reg.af.hi, reg.hl.hi);
+		break;
+	case 0x95:
+		sub(&reg.af.hi, reg.hl.lo);
+		break;
+	case 0x96:
+		sub(&reg.af.hi, mem_read_raw(reg.hl.r));
+		break;
+	case 0x97:
+		sub(&reg.af.hi, reg.af.hi);
+		break;
+	case 0xd6:
+		sub(&reg.af.hi, mem_read());
+		break;
+
+	// 8-bit subtraction A, n + Carry
+	case 0x98:
+		sub(&reg.af.hi, reg.bc.hi + (reg.af.lo & 0x10));
+		break;
+	case 0x99:
+		sub(&reg.af.hi, reg.bc.lo + (reg.af.lo & 0x10));
+		break;
+	case 0x9a:
+		sub(&reg.af.hi, reg.de.hi + (reg.af.lo & 0x10));
+		break;
+	case 0x9b:
+		sub(&reg.af.hi, reg.de.lo + (reg.af.lo & 0x10));
+		break;
+	case 0x9c:
+		sub(&reg.af.hi, reg.hl.hi + (reg.af.lo & 0x10));
+		break;
+	case 0x9d:
+		sub(&reg.af.hi, reg.hl.lo + (reg.af.lo & 0x10));
+		break;
+	case 0x9e:
+		sub(&reg.af.hi, mem_read_raw(reg.hl.r) + (reg.af.lo & 0x10));
+		break;
+	case 0x9f:
+		sub(&reg.af.hi, reg.af.hi + (reg.af.lo & 0x10));
+		break;
+
 
 	case 0x03:
 		inc16(&reg.bc.r);
@@ -343,14 +493,10 @@ void cpu_process_opcode(unsigned char op_code)
 
 	case 0x07:
 		rlc(&reg.af.hi);
-		break;
-
-	case 0x08:
-		mem_write16(mem_read16(), reg.sp);
-		break;
+		break;	
 
 	case 0x09:
-		add(&reg.hl.r, reg.bc.r);
+		add16(&reg.hl.r, reg.bc.r);
 		break;
 
 	case 0xc3:

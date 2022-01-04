@@ -1,5 +1,6 @@
 #include "gb_cpu.h"
 #include "gb_cpu_instructions.h"
+#include "gb_memory.h"
 
 /*-----------------------------------
 Bit	Name	Explanation
@@ -21,14 +22,57 @@ Bit	Name	Explanation
 #define SET_C (reg.af.lo |= 0x10)
 #define CLEAR_C (reg.af.lo &= ~0x10)
 
-void ld(unsigned char* r, unsigned char value)
+void ld(unsigned char* r, const unsigned char value)
 {
 	*r = value;
 }
 
-void ld16(unsigned short* r, unsigned short value)
+void ld16(unsigned short* r, const unsigned short value)
 {
 	*r = value;
+}
+
+void add(unsigned char* r, const unsigned char value)
+{
+	CLEAR_N;
+
+	const unsigned char result = *r + value;
+	// overflow bit 3
+	if ((*r & 0x08) > (result & 0x08))
+		SET_H;
+	else
+		CLEAR_H;
+
+	// overflow bit 7
+	if ((*r & 0x80) > (result & 0x80))
+		SET_C;
+	else
+		CLEAR_C;
+
+	if (result == 0)
+		SET_Z;
+
+	*r = result;
+}
+
+void add16(unsigned short* r, const unsigned short value)
+{
+	CLEAR_N;
+
+	const unsigned short result = *r + value;
+	// overflow bit 11
+	if ((*r & 0x0800) > (result & 0x0800))
+		SET_H;
+	else
+		CLEAR_H;
+
+	// overflow bit 15
+	if ((*r & 0x8000) > (result & 0x8000))
+		SET_C;
+	else
+		CLEAR_C;
+
+	*r = result;
 }
 
 void inc(unsigned char* r)
@@ -66,21 +110,27 @@ void dec16(unsigned short* r)
 	--(*r);
 }
 
-void add(unsigned short* r, unsigned short value)
+void sub(unsigned char* r, const unsigned char value)
 {
-	CLEAR_N;
+	SET_N;
 
-	// overflow bit 11
-	if (((*r & value) & 0x0800) != 0)
+	const unsigned char result = *r - value;
+	// borrow bit 4
+	if ((*r & 0x10) >= (result & 0x10))
 		SET_H;
 	else
 		CLEAR_H;
 
-	// overflow bit 15
-	if (((*r & value) & 0x8000) != 0)
+	// borrow bit 8
+	if ((*r & 0x80) >= (result & 0x80))
 		SET_C;
 	else
 		CLEAR_C;
+
+	if (result == 0)
+		SET_Z;
+
+	*r = result;
 }
 
 void rlc(unsigned char* r)
@@ -95,7 +145,23 @@ void rlc(unsigned char* r)
 		CLEAR_C;
 }
 
-void jump(unsigned short address)
+void jump(const unsigned short address)
 {
 	reg.pc = address;
+}
+
+void set_flags(const unsigned char flags)
+{
+	reg.af.lo = flags;
+}
+
+void push(const unsigned short r)
+{
+	mem_write16(reg.sp, r);
+	reg.sp -= 2;
+}
+
+void pop(unsigned short* r)
+{
+	*r = (0x00ff & (mem_read_raw(reg.sp++)) | (mem_read_raw(reg.sp++) << 8) & 0xff00);
 }
